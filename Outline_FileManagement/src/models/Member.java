@@ -3,8 +3,7 @@ package models;
 import java.sql.Timestamp;
 
 public class Member {
-	private long id;
-	private String username;
+	private String id;
 	private String pwd;
 	private String name;
 	private String email;
@@ -15,9 +14,8 @@ public class Member {
 
 	}
 
-	public Member(long id, String username, String pwd, String name, String phone, String email, Timestamp createDate) {
+	public Member(String id, String pwd, String name, String phone, String email, Timestamp createDate) {
 		this.id = id;
-		this.username = username;
 		this.pwd = pwd;
 		this.name = name;
 		this.email = email;
@@ -25,20 +23,12 @@ public class Member {
 		this.createDate = createDate;
 	}
 
-	public long getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(long id) {
+	public void setId(String id) {
 		this.id = id;
-	}
-
-	public String getUsername() {
-		return username;
-	}
-
-	public void setUsername(String username) {
-		this.username = username;
 	}
 
 	public String getPwd() {

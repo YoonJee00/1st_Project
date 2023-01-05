@@ -23,13 +23,12 @@ public class MemberDao {
 	private PreparedStatement pstmt;
 	private ResultSet rs;
 
-	public int findByUsernameAndPassword(String username, String pwd) {
+	public int findByUsernameAndPassword(String Id, String pwd) {
 		conn = DBConnection.getConnection();
 
 		try {
-			pstmt = conn.prepareStatement("SELECT * FROM MEMBER WHERE USERNAME = ? AND PASSWORD = ?");
-
-			pstmt.setString(1, username);
+			pstmt = conn.prepareStatement("SELECT * FROM MEMBER WHERE ID = ? AND PASSWORD = ?");
+			pstmt.setString(1, Id);
 			pstmt.setString(2, pwd);
 
 			rs = pstmt.executeQuery();
@@ -40,7 +39,6 @@ public class MemberDao {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-
 		return -1;
 	}
 
@@ -49,11 +47,11 @@ public class MemberDao {
 
 		try {
 			pstmt = conn.prepareStatement("INSERT INTO MEMBER VALUES(MEMBER_SEQ.NEXTVAL, ?, ?, ?, ?, ?, SYSDATE)");
-			pstmt.setString(1, member.getUsername());
+			pstmt.setString(1, member.getId());
 			pstmt.setString(2, member.getPwd());
 			pstmt.setString(3, member.getName());
-			pstmt.setString(4, member.getEmail());
-			pstmt.setString(5, member.getPhone());
+			pstmt.setString(4, member.getPhone());
+			pstmt.setString(5, member.getEmail());
 			pstmt.executeUpdate();
 			return 1;
 		} catch (Exception e) {
@@ -71,12 +69,11 @@ public class MemberDao {
 			rs = pstmt.executeQuery();
 			while (rs.next()) {
 				Member member = new Member();
-				member.setId(rs.getLong("Id"));
-				member.setUsername(rs.getString("Username"));
+				member.setId(rs.getString("Id"));
 				member.setPwd(rs.getString("Password"));
 				member.setName(rs.getString("Name"));
-				member.setEmail(rs.getString("Email"));
 				member.setPhone(rs.getString("Phone"));
+				member.setEmail(rs.getString("Email"));
 				member.setCreateDate(rs.getTimestamp("createDate"));
 				members.add(member);
 			}
