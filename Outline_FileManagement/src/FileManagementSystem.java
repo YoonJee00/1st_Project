@@ -64,6 +64,7 @@ public class FileManagementSystem extends JFrame {
 		JButton btnAdd = new JButton("추가하기");
 		btnAdd.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				
 			}
 		});
 		btnAdd.setFont(new Font("나눔스퀘어_ac Bold", Font.PLAIN, 13));
@@ -72,6 +73,7 @@ public class FileManagementSystem extends JFrame {
 		JButton btnRevise = new JButton("수정하기");
 		btnRevise.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				
 			}
 		});
 		btnRevise.setFont(new Font("나눔스퀘어_ac Bold", Font.PLAIN, 13));
@@ -89,6 +91,7 @@ public class FileManagementSystem extends JFrame {
 		JButton btnDelete = new JButton("삭제하기");
 		btnDelete.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				
 			}
 		});
 		btnDelete.setFont(new Font("나눔스퀘어_ac Bold", Font.PLAIN, 13));
