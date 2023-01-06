@@ -2,14 +2,19 @@ import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseListener;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenuBar;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JTree;
@@ -20,7 +25,6 @@ import javax.swing.filechooser.FileSystemView;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.JScrollPane;
 
 public class FileManagementSystem extends JFrame {
 
@@ -61,10 +65,23 @@ public class FileManagementSystem extends JFrame {
 		menuBar.setBounds(0, 0, 925, 27);
 		contentPane.add(menuBar);
 
-		JButton btnAdd = new JButton("추가하기");
+		JButton btnAdd = new JButton("작성하기");
 		btnAdd.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				
+				String path = System.getProperty("user.dir") + File.separator;
+
+				File f = new File(path);
+				if (!f.exists()) {
+					if (f.mkdirs()) {
+						JOptionPane.showMessageDialog(null, "폴더가 생성되었습니다.");
+					} else {
+						JOptionPane.showMessageDialog(null, "폴더 생성에 실패했습니다.");
+					}
+				} else {
+					JOptionPane.showMessageDialog(null, "폴더가 이미 존재합니다.");
+				}
+
+				File f2 = new File(f, "");
 			}
 		});
 		btnAdd.setFont(new Font("나눔스퀘어_ac Bold", Font.PLAIN, 13));
@@ -73,7 +90,7 @@ public class FileManagementSystem extends JFrame {
 		JButton btnRevise = new JButton("수정하기");
 		btnRevise.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				
+
 			}
 		});
 		btnRevise.setFont(new Font("나눔스퀘어_ac Bold", Font.PLAIN, 13));
@@ -82,7 +99,7 @@ public class FileManagementSystem extends JFrame {
 		JButton btnSave = new JButton("저장하기");
 		btnSave.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				
+
 			}
 		});
 		btnSave.setFont(new Font("나눔스퀘어_ac Bold", Font.PLAIN, 13));
@@ -91,9 +108,10 @@ public class FileManagementSystem extends JFrame {
 		JButton btnDelete = new JButton("삭제하기");
 		btnDelete.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				
+				btnDelete.addMouseListener((MouseListener) this);
 			}
 		});
+
 		btnDelete.setFont(new Font("나눔스퀘어_ac Bold", Font.PLAIN, 13));
 		menuBar.add(btnDelete);
 
@@ -115,9 +133,8 @@ public class FileManagementSystem extends JFrame {
 
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
 					folderPath = chooser.getSelectedFile().toString();
-				} else if (returnVal == JFileChooser.CANCEL_OPTION) {
-					System.out.println("Cancel");
-					folderPath = "";
+					File file = chooser.getSelectedFile();
+
 				}
 			}
 		});
@@ -148,73 +165,43 @@ public class FileManagementSystem extends JFrame {
 		}));
 		tree.setBounds(0, 28, 77, 569);
 		contentPane.add(tree);
-		
+
 		scrollPane = new JScrollPane();
 		scrollPane.setBounds(78, 28, 847, 569);
 		contentPane.add(scrollPane);
-		
+
 		table = new JTable();
 		scrollPane.setViewportView(table);
 		table.setModel(new DefaultTableModel(
-			new Object[][] {
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-				{null, null, null, null, null, null},
-			},
-			new String[] {
-				"\uD30C\uC77C\uBA85", "\uACBD\uB85C", "\uD06C\uAE30", "\uC720\uD615", "\uC218\uC815\uD55C \uB0A0\uC9DC", "\uB9CC\uB4E0 \uB0A0\uC9DC"
-			}
-		) {
-			boolean[] columnEditables = new boolean[] {
-				false, true, true, true, true, true
-			};
+				new Object[][] { { null, null, null, null, null, null }, { null, null, null, null, null, null },
+						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
+						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
+						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
+						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
+						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
+						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
+						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
+						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
+						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
+						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
+						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
+						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
+						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
+						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
+						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
+						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
+						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
+						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
+						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
+						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
+						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
+						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
+						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
+						{ null, null, null, null, null, null }, { null, null, null, null, null, null }, },
+				new String[] { "\uD30C\uC77C\uBA85", "\uACBD\uB85C", "\uD06C\uAE30", "\uC720\uD615",
+						"\uC218\uC815\uD55C \uB0A0\uC9DC", "\uB9CC\uB4E0 \uB0A0\uC9DC" }) {
+			boolean[] columnEditables = new boolean[] { false, true, true, true, true, true };
+
 			public boolean isCellEditable(int row, int column) {
 				return columnEditables[column];
 			}

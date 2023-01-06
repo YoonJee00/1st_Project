@@ -66,7 +66,7 @@ public class Pwd_Frame extends JFrame {
 		tfName.setBounds(157, 60, 199, 25);
 		contentPane.add(tfName);
 		
-		JLabel lblPhone = new JLabel("휴대전화");
+		JLabel lblPhone = new JLabel("전화번호");
 		lblPhone.setFont(new Font("나눔스퀘어_ac", Font.PLAIN, 13));
 		lblPhone.setBounds(73, 112, 57, 15);
 		contentPane.add(lblPhone);
