@@ -3,6 +3,11 @@ import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+
+import com.aspose.cad.internal.bouncycastle.crypto.generators.RSABlindingFactorGenerator;
+
+import dao.MemberDao;
+
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
@@ -16,6 +21,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
+
+import dao.MemberDao;
+import models.Member;
 
 public class ID_Frame extends JFrame {
 
@@ -113,6 +121,18 @@ public class ID_Frame extends JFrame {
 					tfPhone2.grabFocus();
 					return;
 				}
+
+				String Name = tfName.getText();
+				String Phone1 = tfPhone1.getText();
+				String Phone2 = tfPhone2.getText();
+				MemberDao dao = MemberDao.getInstance();
+
+				int result = dao.findIdByPhone(Name, Phone1, Phone2);
+				if (result == 1) {
+					JOptionPane.showMessageDialog(null, "ID");
+				} else {
+					JOptionPane.showMessageDialog(null, "일치하는 회원 정보가 없습니다.");
+				}
 			}
 		});
 		btnOk1.setFont(new Font("나눔스퀘어_ac Bold", Font.PLAIN, 13));
@@ -126,7 +146,7 @@ public class ID_Frame extends JFrame {
 
 		tfEmail = new JTextField();
 		tfEmail.setFont(new Font("굴림", Font.PLAIN, 13));
-		tfEmail.setBounds(157, 218, 199, 25);
+		tfEmail.setBounds(157, 218, 90, 25);
 		contentPane.add(tfEmail);
 		tfEmail.setColumns(10);
 
@@ -135,8 +155,18 @@ public class ID_Frame extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				if (tfEmail.getText().trim().length() == 0) {
 					JOptionPane.showMessageDialog(null, "이메일을 입력해주세요.", "이메일 입력", JOptionPane.WARNING_MESSAGE);
-					tfPhone1.grabFocus();
+					tfEmail.grabFocus();
 					return;
+				}
+
+				String Email = tfEmail.getText();
+				MemberDao dao = MemberDao.getInstance();
+
+				int result = dao.findIdByEmail(Email);
+				if (result == 1) {
+					JOptionPane.showMessageDialog(null, "Email");
+				} else {
+					JOptionPane.showMessageDialog(null, "일치하는 회원 정보가 없습니다.");
 				}
 			}
 		});
@@ -155,5 +185,20 @@ public class ID_Frame extends JFrame {
 		telBox.setFont(new Font("굴림", Font.PLAIN, 13));
 		telBox.setBounds(157, 118, 55, 25);
 		contentPane.add(telBox);
+
+		JComboBox EmailBox = new JComboBox();
+		EmailBox.setModel(new DefaultComboBoxModel(
+				new String[] { "직접입력", "naver.com", "daum.net", "gmail.com", "nate.com", "hanmail.net" }));
+		EmailBox.setToolTipText("");
+		EmailBox.setFont(new Font("굴림", Font.PLAIN, 13));
+		EmailBox.setEnabled(true);
+		EmailBox.setEditable(true);
+		EmailBox.setBounds(266, 218, 90, 25);
+		contentPane.add(EmailBox);
+
+		JLabel lblmail = new JLabel("@");
+		lblmail.setFont(new Font("나눔스퀘어_ac Bold", Font.PLAIN, 15));
+		lblmail.setBounds(248, 222, 15, 15);
+		contentPane.add(lblmail);
 	}
 }

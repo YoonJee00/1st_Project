@@ -87,10 +87,35 @@ public class FileManagementSystem extends JFrame {
 		btnAdd.setFont(new Font("나눔스퀘어_ac Bold", Font.PLAIN, 13));
 		menuBar.add(btnAdd);
 
-		JButton btnRevise = new JButton("수정하기");
+		JButton btnRevise = new JButton("모아보기");
 		btnRevise.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				String folderPath = "";
 
+				JFileChooser chooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+				chooser.setCurrentDirectory(new File("/"));
+				chooser.setAcceptAllFileFilterUsed(true);
+				chooser.setDialogTitle("내 PC");
+				chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+
+				FileNameExtensionFilter fBF = new FileNameExtensionFilter("Binary File", "cd11");
+				FileNameExtensionFilter fTF = new FileNameExtensionFilter("텍스트 파일", "txt");
+				FileNameExtensionFilter fHF = new FileNameExtensionFilter("한글 파일", "hwp");
+				FileNameExtensionFilter fWF = new FileNameExtensionFilter("워드 파일", "docx");
+				FileNameExtensionFilter fWPF = new FileNameExtensionFilter("워드패드 파일", "rtf");
+				chooser.setFileFilter(fBF);
+				chooser.setFileFilter(fTF);
+				chooser.setFileFilter(fHF);
+				chooser.setFileFilter(fWF);
+				chooser.setFileFilter(fWPF);
+
+				int returnVal = chooser.showOpenDialog(null);
+
+				if (returnVal == JFileChooser.APPROVE_OPTION) {
+					folderPath = chooser.getSelectedFile().toString();
+					File file = chooser.getSelectedFile();
+
+				}
 			}
 		});
 		btnRevise.setFont(new Font("나눔스퀘어_ac Bold", Font.PLAIN, 13));
@@ -118,24 +143,8 @@ public class FileManagementSystem extends JFrame {
 		JButton btnGet = new JButton("불러오기");
 		btnGet.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String folderPath = "";
-
-				JFileChooser chooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-				chooser.setCurrentDirectory(new File("/"));
-				chooser.setAcceptAllFileFilterUsed(true);
-				chooser.setDialogTitle("내 PC");
-				chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-
-				FileNameExtensionFilter filter = new FileNameExtensionFilter("Binary File", "cd11");
-				chooser.setFileFilter(filter);
-
-				int returnVal = chooser.showOpenDialog(null);
-
-				if (returnVal == JFileChooser.APPROVE_OPTION) {
-					folderPath = chooser.getSelectedFile().toString();
-					File file = chooser.getSelectedFile();
-
-				}
+				JPanel jp = new JPanel();
+				jp.setVisible(true);
 			}
 		});
 		btnGet.setFont(new Font("나눔스퀘어_ac Bold", Font.PLAIN, 13));
@@ -163,11 +172,11 @@ public class FileManagementSystem extends JFrame {
 			{
 			}
 		}));
-		tree.setBounds(0, 28, 77, 569);
+		tree.setBounds(0, 28, 178, 569);
 		contentPane.add(tree);
 
 		scrollPane = new JScrollPane();
-		scrollPane.setBounds(78, 28, 847, 569);
+		scrollPane.setBounds(179, 28, 746, 569);
 		contentPane.add(scrollPane);
 
 		table = new JTable();

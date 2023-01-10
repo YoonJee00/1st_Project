@@ -118,8 +118,8 @@ public class Signup_Frame extends JFrame {
 				member.setPwd(pfPwd2.getText());
 				member.setName(tfName.getName());
 				member.setEmail(tfEmail.getText());
-				member.setPhone(tfPhone1.getText());
-				member.setPhone(tfPhone2.getText());
+				member.setPhone1(tfPhone1.getText());
+				member.setPhone2(tfPhone2.getText());
 
 				MemberDao dao = MemberDao.getInstance();
 				int result = dao.save(member);
