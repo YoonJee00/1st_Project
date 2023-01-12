@@ -6,8 +6,9 @@ public class Member {
 	private String id;
 	private String pwd;
 	private String name;
+	private String phone1;
+	private String phone2;
 	private String email;
-	private String phone1, phone2;
 	private Timestamp createDate;
 
 	public Member() {
@@ -19,9 +20,9 @@ public class Member {
 		this.id = id;
 		this.pwd = pwd;
 		this.name = name;
-		this.email = email;
 		this.phone1 = phone1;
 		this.phone2 = phone2;
+		this.email = email;
 		this.createDate = createDate;
 	}
 
@@ -49,14 +50,6 @@ public class Member {
 		this.name = name;
 	}
 
-	public String getEmail() {
-		return email;
-	}
-
-	public void setEmail(String email) {
-		this.email = email;
-	}
-
 	public String getPhone1() {
 		return phone1;
 	}
@@ -71,6 +64,14 @@ public class Member {
 
 	public void setPhone2(String phone2) {
 		this.phone2 = phone2;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
 	}
 
 	public Timestamp getCreateDate() {

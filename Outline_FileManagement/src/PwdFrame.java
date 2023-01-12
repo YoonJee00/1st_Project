@@ -18,7 +18,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
 
-public class Pwd_Frame extends JFrame {
+public class PwdFrame extends JFrame {
 
 	private JPanel contentPane;
 	private JTextField tfName;
@@ -34,7 +34,7 @@ public class Pwd_Frame extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					Pwd_Frame frame = new Pwd_Frame();
+					PwdFrame frame = new PwdFrame();
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -46,7 +46,7 @@ public class Pwd_Frame extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	public Pwd_Frame() {
+	public PwdFrame() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 450, 345);
 		contentPane = new JPanel();

@@ -25,7 +25,7 @@ import javax.swing.DefaultComboBoxModel;
 import dao.MemberDao;
 import models.Member;
 
-public class ID_Frame extends JFrame {
+public class IdFrame extends JFrame {
 
 	private JPanel contentPane;
 	private JTextField tfName;
@@ -41,7 +41,7 @@ public class ID_Frame extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					ID_Frame frame = new ID_Frame();
+					IdFrame frame = new IdFrame();
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -53,7 +53,7 @@ public class ID_Frame extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	public ID_Frame() {
+	public IdFrame() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 450, 345);
 		contentPane = new JPanel();

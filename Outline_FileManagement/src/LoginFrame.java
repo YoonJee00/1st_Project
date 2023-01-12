@@ -14,7 +14,7 @@ import javax.swing.border.EmptyBorder;
 
 import dao.MemberDao;
 
-public class Login_Frame extends JFrame {
+public class LoginFrame extends JFrame {
 
 	private JPanel contentPane;
 	private JTextField tfId;
@@ -27,7 +27,7 @@ public class Login_Frame extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					Login_Frame frame = new Login_Frame();
+					LoginFrame frame = new LoginFrame();
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -39,7 +39,7 @@ public class Login_Frame extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	public Login_Frame() {
+	public LoginFrame() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 450, 300);
 		contentPane = new JPanel();
@@ -74,6 +74,7 @@ public class Login_Frame extends JFrame {
 				if (result == 1) {
 					JOptionPane.showMessageDialog(null, "로그인 성공");
 					FileManagementSystem fileManagement = new FileManagementSystem();
+					fileManagement.setVisible(true);
 					dispose();
 				} else {
 					JOptionPane.showMessageDialog(null, "로그인 실패");
@@ -87,7 +88,7 @@ public class Login_Frame extends JFrame {
 		JButton btnSingup = new JButton("회원가입");
 		btnSingup.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Signup_Frame signup = new Signup_Frame();
+				SignupFrame signup = new SignupFrame();
 				signup.setVisible(true);
 			}
 		});
@@ -98,7 +99,7 @@ public class Login_Frame extends JFrame {
 		JButton btnFindId = new JButton("아이디 찾기");
 		btnFindId.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				ID_Frame sID = new ID_Frame();
+				IdFrame sID = new IdFrame();
 				sID.setVisible(true);
 			}
 		});
@@ -109,7 +110,7 @@ public class Login_Frame extends JFrame {
 		JButton btnFindPwd = new JButton("비밀번호 찾기");
 		btnFindPwd.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Pwd_Frame sPwd = new Pwd_Frame();
+				PwdFrame sPwd = new PwdFrame();
 				sPwd.setVisible(true);
 			}
 		});

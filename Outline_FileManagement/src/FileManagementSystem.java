@@ -1,37 +1,50 @@
+import java.awt.Desktop;
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseListener;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenuBar;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JTree;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.filechooser.FileSystemView;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 
 public class FileManagementSystem extends JFrame {
 
+	private Desktop desktop;
+	private FileSystemView fileSystemView;
+	private File currentFile;
+	private JTree tree;
+	private DefaultTreeModel treeModel;
+	private JProgressBar progressBar;
+//	private FileTableModel fileTableModel;
 	private JPanel contentPane;
 	private JTextField tfSearch;
 	private JTable table;
 	private JScrollPane scrollPane;
+	private ListSelectionListener listSelectionListener;
 
 	/**
 	 * Launch the application.
@@ -58,6 +71,9 @@ public class FileManagementSystem extends JFrame {
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 
+		fileSystemView = FileSystemView.getFileSystemView();
+		desktop = Desktop.getDesktop();
+
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 
@@ -65,29 +81,22 @@ public class FileManagementSystem extends JFrame {
 		menuBar.setBounds(0, 0, 925, 27);
 		contentPane.add(menuBar);
 
-		JButton btnAdd = new JButton("작성하기");
+		JButton btnAdd = new JButton("파일열기");
 		btnAdd.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String path = System.getProperty("user.dir") + File.separator;
+				btnAdd.setMnemonic('o');
 
-				File f = new File(path);
-				if (!f.exists()) {
-					if (f.mkdirs()) {
-						JOptionPane.showMessageDialog(null, "폴더가 생성되었습니다.");
-					} else {
-						JOptionPane.showMessageDialog(null, "폴더 생성에 실패했습니다.");
-					}
-				} else {
-					JOptionPane.showMessageDialog(null, "폴더가 이미 존재합니다.");
+				try {
+					desktop.open(currentFile);
+				} catch (Throwable t) {
+					
 				}
-
-				File f2 = new File(f, "");
 			}
 		});
 		btnAdd.setFont(new Font("나눔스퀘어_ac Bold", Font.PLAIN, 13));
 		menuBar.add(btnAdd);
 
-		JButton btnRevise = new JButton("모아보기");
+		JButton btnRevise = new JButton("수정하기");
 		btnRevise.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String folderPath = "";
@@ -121,7 +130,7 @@ public class FileManagementSystem extends JFrame {
 		btnRevise.setFont(new Font("나눔스퀘어_ac Bold", Font.PLAIN, 13));
 		menuBar.add(btnRevise);
 
-		JButton btnSave = new JButton("저장하기");
+		JButton btnSave = new JButton("작성하기");
 		btnSave.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 
@@ -130,7 +139,7 @@ public class FileManagementSystem extends JFrame {
 		btnSave.setFont(new Font("나눔스퀘어_ac Bold", Font.PLAIN, 13));
 		menuBar.add(btnSave);
 
-		JButton btnDelete = new JButton("삭제하기");
+		JButton btnDelete = new JButton("복사하기");
 		btnDelete.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				btnDelete.addMouseListener((MouseListener) this);
@@ -140,7 +149,7 @@ public class FileManagementSystem extends JFrame {
 		btnDelete.setFont(new Font("나눔스퀘어_ac Bold", Font.PLAIN, 13));
 		menuBar.add(btnDelete);
 
-		JButton btnGet = new JButton("불러오기");
+		JButton btnGet = new JButton("이름편집");
 		btnGet.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				JPanel jp = new JPanel();
@@ -150,7 +159,7 @@ public class FileManagementSystem extends JFrame {
 		btnGet.setFont(new Font("나눔스퀘어_ac Bold", Font.PLAIN, 13));
 		menuBar.add(btnGet);
 
-		JButton btnSetting = new JButton("환경설정");
+		JButton btnSetting = new JButton("삭제하기");
 		btnSetting.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 			}
@@ -167,20 +176,49 @@ public class FileManagementSystem extends JFrame {
 		menuBar.add(tfSearch);
 		tfSearch.setColumns(10);
 
-		JTree tree = new JTree();
-		tree.setModel(new DefaultTreeModel(new DefaultMutableTreeNode("File") {
-			{
-			}
-		}));
-		tree.setBounds(0, 28, 178, 569);
-		contentPane.add(tree);
-
 		scrollPane = new JScrollPane();
 		scrollPane.setBounds(179, 28, 746, 569);
 		contentPane.add(scrollPane);
 
 		table = new JTable();
 		scrollPane.setViewportView(table);
+		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		table.setAutoCreateRowSorter(true);
+
+		listSelectionListener = new ListSelectionListener() {
+
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				int row = table.getSelectionModel().getLeadSelectionIndex();
+				setFileDetails(((FileTableModel) table.getModel()).getFile(row));
+			}
+		};
+
+		table.getSelectionModel().addListSelectionListener(listSelectionListener);
+		DefaultMutableTreeNode root = new DefaultMutableTreeNode();
+		treeModel = new DefaultTreeModel(root);
+
+		TreeSelectionListener treeSelectionListener = new TreeSelectionListener() {
+			public void valueChanged(TreeSelectionEvent tse) {
+				DefaultMutableTreeNode node = (DefaultMutableTreeNode) tse.getPath().getLastPathComponent();
+				showChildren(node);
+				setFileDetails((File) node.getUserObject());
+			}
+		};
+
+		File[] roots = fileSystemView.getRoots();
+		for (File fileSystemRoot : roots) {
+			DefaultMutableTreeNode node = new DefaultMutableTreeNode(fileSystemRoot);
+			root.add(node);
+
+			File[] files = fileSystemView.getFiles(fileSystemRoot, true);
+			for (File file : files) {
+				if (file.isDirectory()) {
+					node.add(new DefaultMutableTreeNode(file));
+				}
+			}
+		}
+
 		table.setModel(new DefaultTableModel(
 				new Object[][] { { null, null, null, null, null, null }, { null, null, null, null, null, null },
 						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
@@ -217,5 +255,17 @@ public class FileManagementSystem extends JFrame {
 		});
 		table.getColumnModel().getColumn(0).setResizable(false);
 		table.setAutoCreateRowSorter(true);
+
+		JScrollPane scrollPane_tree = new JScrollPane();
+		scrollPane_tree.setBounds(0, 25, 178, 572);
+		contentPane.add(scrollPane_tree);
+
+		tree = new JTree(treeModel);
+		scrollPane_tree.setViewportView(tree);
+		tree.setRootVisible(false);
+		tree.addTreeSelectionListener(treeSelectionListener);
+		tree.setCellRenderer(new DefaultTreeCellRenderer());
+		tree.expandRow(0);
+
 	}
 }

@@ -107,7 +107,7 @@ public class MemberDao {
 		conn = DBConnection.getConnection();
 
 		try {
-			pstmt = conn.prepareStatement("INSERT INTO MEMBER VALUES(MEMBER_SEQ.NEXTVAL, ?, ?, ?, ?, ?, ?, SYSDATE)");
+			pstmt = conn.prepareStatement("INSERT INTO MEMBER VALUES(?, ?, ?, ?, ?, ?, SYSDATE)");
 			pstmt.setString(1, member.getId());
 			pstmt.setString(2, member.getPwd());
 			pstmt.setString(3, member.getName());
@@ -148,9 +148,4 @@ public class MemberDao {
 
 		return null;
 	}
-
-	public void delete(int id) {
-
-	}
-
 }

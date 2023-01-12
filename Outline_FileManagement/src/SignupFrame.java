@@ -18,7 +18,7 @@ import models.Member;
 import javax.swing.JComboBox;
 import javax.swing.DefaultComboBoxModel;
 
-public class Signup_Frame extends JFrame {
+public class SignupFrame extends JFrame {
 
 	private JPanel contentPane;
 	private JTextField tfPhone1;
@@ -36,7 +36,7 @@ public class Signup_Frame extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					Signup_Frame frame = new Signup_Frame();
+					SignupFrame frame = new SignupFrame();
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -48,7 +48,7 @@ public class Signup_Frame extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	public Signup_Frame() {
+	public SignupFrame() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 450, 520);
 		contentPane = new JPanel();
@@ -141,7 +141,7 @@ public class Signup_Frame extends JFrame {
 		JButton btnNo = new JButton("취소");
 		btnNo.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Login_Frame lgframe = new Login_Frame();
+				LoginFrame lgframe = new LoginFrame();
 				lgframe.setVisible(true);
 				dispose();
 			}
