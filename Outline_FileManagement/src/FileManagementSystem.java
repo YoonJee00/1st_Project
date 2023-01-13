@@ -1,271 +1,668 @@
+import java.awt.BorderLayout;
+import java.awt.Container;
 import java.awt.Desktop;
-import java.awt.EventQueue;
-import java.awt.Font;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseListener;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.channels.FileChannel;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
+import javax.imageio.ImageIO;
+import javax.swing.ButtonGroup;
+import javax.swing.Icon;
 import javax.swing.JButton;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JMenuBar;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.ListSelectionModel;
-import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
+import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.filechooser.FileSystemView;
-import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
 
-public class FileManagementSystem extends JFrame {
+import org.apache.commons.io.FileUtils;
 
+public class FileManagementSystem {
+
+	public static final String APP_TITLE = "File Management System";
 	private Desktop desktop;
 	private FileSystemView fileSystemView;
 	private File currentFile;
+	private JPanel Outline;
 	private JTree tree;
 	private DefaultTreeModel treeModel;
-	private JProgressBar progressBar;
-//	private FileTableModel fileTableModel;
-	private JPanel contentPane;
-	private JTextField tfSearch;
 	private JTable table;
-	private JScrollPane scrollPane;
-	private ListSelectionListener listSelectionListener;
+	private FileTableModel fileTableModel;
+	private JProgressBar progressBar;
 
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					FileManagementSystem frame = new FileManagementSystem();
-					frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
+	private ListSelectionListener listSelectionListener;
+	private boolean cellSizesSet = false;
+	private int rowIconPadding = 6;
+
+	private JButton btnOpen;
+	private JButton btnPrint;
+	private JButton btnEdit;
+	private JButton btnDelete;
+	private JButton btnNew;
+	private JButton btnCopy;
+	private JButton btnRename;
+
+	private JLabel lbfileName;
+	private JTextField tfpath;
+	private JLabel lbdate;
+	private JLabel lbsize;
+	private JRadioButton rbDirectory;
+	private JRadioButton rbFile;
+
+	private JPanel newFilePanel;
+	private JRadioButton rbnewTypeFile;
+	private JTextField tfname;
+
+	public Container getGui() {
+		if (Outline == null) {
+			Outline = new JPanel(new BorderLayout(3, 3));
+			Outline.setBorder(new EmptyBorder(5, 5, 5, 5));
+
+			fileSystemView = FileSystemView.getFileSystemView();
+			desktop = Desktop.getDesktop();
+
+			JPanel fileInfo = new JPanel(new BorderLayout(3, 3));
+
+			table = new JTable();
+			table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+			table.setAutoCreateRowSorter(true);
+			table.setShowVerticalLines(true);
+
+			listSelectionListener = new ListSelectionListener() {
+
+				@Override
+				public void valueChanged(ListSelectionEvent e) {
+					int row = table.getSelectionModel().getLeadSelectionIndex();
+					setFileDetails(((FileTableModel) table.getModel()).getFile(row));
+				}
+			};
+
+			table.getSelectionModel().addListSelectionListener(listSelectionListener);
+			JScrollPane tableScroll = new JScrollPane(table);
+			Dimension d = tableScroll.getPreferredSize();
+			tableScroll.setPreferredSize(new Dimension((int) d.getWidth(), (int) d.getHeight() / 2));
+			fileInfo.add(tableScroll, BorderLayout.CENTER);
+
+			DefaultMutableTreeNode root = new DefaultMutableTreeNode();
+			treeModel = new DefaultTreeModel(root);
+
+			TreeSelectionListener treeSelectionListener = new TreeSelectionListener() {
+
+				@Override
+				public void valueChanged(TreeSelectionEvent e) {
+					DefaultMutableTreeNode node = (DefaultMutableTreeNode) e.getPath().getLastPathComponent();
+					showChild(node);
+					setFileDetails((File) node.getUserObject());
+				}
+			};
+
+			File[] roots = fileSystemView.getRoots();
+			for (File fileSystemRoot : roots) {
+				DefaultMutableTreeNode node = new DefaultMutableTreeNode(fileSystemRoot);
+				root.add(node);
+
+				File[] files = fileSystemView.getFiles(fileSystemRoot, true);
+				for (File file : files) {
+					if (file.isDirectory()) {
+						node.add(new DefaultMutableTreeNode(file));
+					}
 				}
 			}
-		});
+
+			tree = new JTree(treeModel);
+			tree.setRootVisible(false);
+			tree.addTreeSelectionListener(treeSelectionListener);
+			tree.setCellRenderer(new FileTreeCellRenderer());
+			tree.expandRow(0);
+			JScrollPane treeScroll = new JScrollPane(tree);
+
+			tree.setVisibleRowCount(15);
+
+			Dimension preferredSize = treeScroll.getPreferredSize();
+			Dimension widePreffered = new Dimension(200, (int) preferredSize.getHeight());
+			treeScroll.setPreferredSize(widePreffered);
+
+			JPanel mainFile = new JPanel(new BorderLayout(4, 2));
+			mainFile.setBorder(new EmptyBorder(0, 6, 0, 6));
+
+			JPanel fileLabels = new JPanel(new GridLayout(0, 1, 2, 2));
+			mainFile.add(fileLabels, BorderLayout.WEST);
+
+			JPanel fileValues = new JPanel(new GridLayout(0, 1, 2, 2));
+			mainFile.add(fileValues, BorderLayout.CENTER);
+
+			fileLabels.add(new JLabel("파일명", JLabel.TRAILING));
+			lbfileName = new JLabel();
+			fileValues.add(lbfileName);
+			fileLabels.add(new JLabel("경로", JLabel.TRAILING));
+			tfpath = new JTextField(8);
+			tfpath.setEditable(true);
+			fileValues.add(tfpath);
+			fileLabels.add(new JLabel("수정한 날짜", JLabel.TRAILING));
+			lbdate = new JLabel();
+			fileValues.add(lbdate);
+			fileLabels.add(new JLabel("파일 크기", JLabel.TRAILING));
+			lbsize = new JLabel();
+			fileValues.add(lbsize);
+			fileLabels.add(new JLabel("종류", JLabel.TRAILING));
+
+			JPanel fileType = new JPanel(new FlowLayout(FlowLayout.LEADING, 4, 0));
+			rbDirectory = new JRadioButton("파일");
+			rbDirectory.setEnabled(false);
+			fileType.add(rbDirectory);
+
+			rbFile = new JRadioButton("문서");
+			rbFile.setEnabled(false);
+			fileType.add(rbFile);
+			fileValues.add(fileType);
+
+			int count = fileLabels.getComponentCount();
+			for (int i = 0; i < count; i++) {
+				fileLabels.getComponent(i).setEnabled(false);
+			}
+
+			JToolBar toolBar = new JToolBar();
+			toolBar.setFloatable(false);
+
+			btnOpen = new JButton("파일열기");
+			btnOpen.setMnemonic('o');
+
+			btnOpen.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					try {
+						desktop.open(currentFile);
+					} catch (Throwable t) {
+						showThrowable(t);
+					}
+
+					Outline.repaint();
+				}
+			});
+			toolBar.add(btnOpen);
+
+			btnEdit = new JButton("편집하기");
+			btnEdit.setMnemonic('e');
+			btnEdit.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					try {
+						desktop.edit(currentFile);
+					} catch (Throwable t) {
+						showThrowable(t);
+					}
+				}
+			});
+			toolBar.add(btnEdit);
+
+			btnPrint = new JButton("출력하기");
+			btnPrint.setMnemonic('p');
+			btnPrint.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					try {
+						desktop.print(currentFile);
+					} catch (Throwable t) {
+						showThrowable(t);
+					}
+				}
+			});
+			toolBar.add(btnPrint);
+
+			btnOpen.setEnabled(desktop.isSupported(Desktop.Action.OPEN));
+			btnEdit.setEnabled(desktop.isSupported(Desktop.Action.EDIT));
+			btnPrint.setEnabled(desktop.isSupported(Desktop.Action.PRINT));
+
+			toolBar.addSeparator();
+
+			btnNew = new JButton("새파일");
+			btnNew.setMnemonic('n');
+			btnNew.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					newFile();
+				}
+			});
+			toolBar.add(btnNew);
+
+			btnCopy = new JButton("복사하기");
+			btnCopy.setMnemonic('c');
+			btnCopy.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+//					
+//					
+
+				}
+			});
+			toolBar.add(btnCopy);
+
+			btnRename = new JButton("이름편집");
+			btnRename.setMnemonic('r');
+			btnRename.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					renameFile();
+				}
+			});
+			toolBar.add(btnRename);
+
+			btnDelete = new JButton("삭제하기");
+			btnDelete.setMnemonic('d');
+			btnDelete.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					deleteFile();
+				}
+			});
+			toolBar.add(btnDelete);
+
+			JPanel fileView = new JPanel(new BorderLayout(3, 3));
+
+			fileView.add(toolBar, BorderLayout.NORTH);
+			fileView.add(mainFile, BorderLayout.CENTER);
+
+			fileInfo.add(fileView, BorderLayout.SOUTH);
+
+			JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, fileInfo, treeScroll);
+			Outline.add(splitPane, BorderLayout.CENTER);
+
+			JPanel pbBar = new JPanel(new BorderLayout(3, 3));
+			progressBar = new JProgressBar();
+			pbBar.add(progressBar, BorderLayout.EAST);
+			progressBar.setVisible(true);
+
+			Outline.add(pbBar, BorderLayout.SOUTH);
+		}
+		return Outline;
 	}
 
-	/**
-	 * Create the frame.
-	 */
-	public FileManagementSystem() {
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 941, 637);
-		contentPane = new JPanel();
-		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+	public void showRootFile() {
+		tree.setSelectionInterval(0, 0);
+	}
 
-		fileSystemView = FileSystemView.getFileSystemView();
-		desktop = Desktop.getDesktop();
+	private TreePath findTreePath(File find) {
+		for (int i = 0; i < tree.getRowCount(); i++) {
+			TreePath treePath = tree.getPathForRow(i);
+			Object object = treePath.getLastPathComponent();
+			DefaultMutableTreeNode node = (DefaultMutableTreeNode) object;
+			File nodeFile = (File) node.getUserObject();
 
-		setContentPane(contentPane);
-		contentPane.setLayout(null);
+			if (nodeFile.equals(find))
+				;
+			return treePath;
+		}
 
-		JMenuBar menuBar = new JMenuBar();
-		menuBar.setBounds(0, 0, 925, 27);
-		contentPane.add(menuBar);
+		return null;
+	}
 
-		JButton btnAdd = new JButton("파일열기");
-		btnAdd.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				btnAdd.setMnemonic('o');
+	private void deleteFile() {
+		if (currentFile == null) {
+			showErrorMessage("파일을 선택해주세요.", "Select File");
+			return;
+		}
 
-				try {
-					desktop.open(currentFile);
-				} catch (Throwable t) {
-					
+		int result = JOptionPane.showConfirmDialog(Outline, "파일을 삭제하시겠습니까?", "Delete File", JOptionPane.ERROR_MESSAGE);
+
+		if (result == JOptionPane.OK_OPTION) {
+			try {
+				System.out.println("currentFile : " + currentFile);
+				TreePath parentPath = findTreePath(currentFile.getParentFile());
+				System.out.println("parentPath : " + parentPath);
+				DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) parentPath.getLastPathComponent();
+				System.out.println("parentNode : " + parentNode);
+
+				boolean directory = currentFile.isDirectory();
+				if (FileUtils.deleteQuietly(currentFile)) {
+					if (directory) {
+						TreePath currentPath = findTreePath(currentFile);
+						System.out.println(currentPath);
+						DefaultMutableTreeNode currentNode = (DefaultMutableTreeNode) currentPath
+								.getLastPathComponent();
+
+						treeModel.removeNodeFromParent(currentNode);
+					}
+
+					showChild(parentNode);
+				} else {
+					String message = currentFile + " 파일을 삭제할 수 없습니다.";
+					showErrorMessage(message, "Delete Failed");
 				}
-			}
-		});
-		btnAdd.setFont(new Font("나눔스퀘어_ac Bold", Font.PLAIN, 13));
-		menuBar.add(btnAdd);
-
-		JButton btnRevise = new JButton("수정하기");
-		btnRevise.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				String folderPath = "";
-
-				JFileChooser chooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-				chooser.setCurrentDirectory(new File("/"));
-				chooser.setAcceptAllFileFilterUsed(true);
-				chooser.setDialogTitle("내 PC");
-				chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-
-				FileNameExtensionFilter fBF = new FileNameExtensionFilter("Binary File", "cd11");
-				FileNameExtensionFilter fTF = new FileNameExtensionFilter("텍스트 파일", "txt");
-				FileNameExtensionFilter fHF = new FileNameExtensionFilter("한글 파일", "hwp");
-				FileNameExtensionFilter fWF = new FileNameExtensionFilter("워드 파일", "docx");
-				FileNameExtensionFilter fWPF = new FileNameExtensionFilter("워드패드 파일", "rtf");
-				chooser.setFileFilter(fBF);
-				chooser.setFileFilter(fTF);
-				chooser.setFileFilter(fHF);
-				chooser.setFileFilter(fWF);
-				chooser.setFileFilter(fWPF);
-
-				int returnVal = chooser.showOpenDialog(null);
-
-				if (returnVal == JFileChooser.APPROVE_OPTION) {
-					folderPath = chooser.getSelectedFile().toString();
-					File file = chooser.getSelectedFile();
-
-				}
-			}
-		});
-		btnRevise.setFont(new Font("나눔스퀘어_ac Bold", Font.PLAIN, 13));
-		menuBar.add(btnRevise);
-
-		JButton btnSave = new JButton("작성하기");
-		btnSave.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-
-			}
-		});
-		btnSave.setFont(new Font("나눔스퀘어_ac Bold", Font.PLAIN, 13));
-		menuBar.add(btnSave);
-
-		JButton btnDelete = new JButton("복사하기");
-		btnDelete.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				btnDelete.addMouseListener((MouseListener) this);
-			}
-		});
-
-		btnDelete.setFont(new Font("나눔스퀘어_ac Bold", Font.PLAIN, 13));
-		menuBar.add(btnDelete);
-
-		JButton btnGet = new JButton("이름편집");
-		btnGet.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				JPanel jp = new JPanel();
-				jp.setVisible(true);
-			}
-		});
-		btnGet.setFont(new Font("나눔스퀘어_ac Bold", Font.PLAIN, 13));
-		menuBar.add(btnGet);
-
-		JButton btnSetting = new JButton("삭제하기");
-		btnSetting.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-			}
-		});
-		btnSetting.setFont(new Font("나눔스퀘어_ac Bold", Font.PLAIN, 13));
-		menuBar.add(btnSetting);
-
-		JLabel lblSearch = new JLabel("   검색   ");
-		lblSearch.setHorizontalAlignment(SwingConstants.CENTER);
-		lblSearch.setFont(new Font("나눔스퀘어_ac Bold", Font.PLAIN, 13));
-		menuBar.add(lblSearch);
-
-		tfSearch = new JTextField();
-		menuBar.add(tfSearch);
-		tfSearch.setColumns(10);
-
-		scrollPane = new JScrollPane();
-		scrollPane.setBounds(179, 28, 746, 569);
-		contentPane.add(scrollPane);
-
-		table = new JTable();
-		scrollPane.setViewportView(table);
-		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		table.setAutoCreateRowSorter(true);
-
-		listSelectionListener = new ListSelectionListener() {
-
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				int row = table.getSelectionModel().getLeadSelectionIndex();
-				setFileDetails(((FileTableModel) table.getModel()).getFile(row));
-			}
-		};
-
-		table.getSelectionModel().addListSelectionListener(listSelectionListener);
-		DefaultMutableTreeNode root = new DefaultMutableTreeNode();
-		treeModel = new DefaultTreeModel(root);
-
-		TreeSelectionListener treeSelectionListener = new TreeSelectionListener() {
-			public void valueChanged(TreeSelectionEvent tse) {
-				DefaultMutableTreeNode node = (DefaultMutableTreeNode) tse.getPath().getLastPathComponent();
-				showChildren(node);
-				setFileDetails((File) node.getUserObject());
-			}
-		};
-
-		File[] roots = fileSystemView.getRoots();
-		for (File fileSystemRoot : roots) {
-			DefaultMutableTreeNode node = new DefaultMutableTreeNode(fileSystemRoot);
-			root.add(node);
-
-			File[] files = fileSystemView.getFiles(fileSystemRoot, true);
-			for (File file : files) {
-				if (file.isDirectory()) {
-					node.add(new DefaultMutableTreeNode(file));
-				}
+			} catch (Throwable t) {
+				showThrowable(t);
 			}
 		}
 
-		table.setModel(new DefaultTableModel(
-				new Object[][] { { null, null, null, null, null, null }, { null, null, null, null, null, null },
-						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
-						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
-						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
-						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
-						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
-						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
-						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
-						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
-						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
-						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
-						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
-						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
-						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
-						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
-						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
-						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
-						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
-						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
-						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
-						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
-						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
-						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
-						{ null, null, null, null, null, null }, { null, null, null, null, null, null },
-						{ null, null, null, null, null, null }, { null, null, null, null, null, null }, },
-				new String[] { "\uD30C\uC77C\uBA85", "\uACBD\uB85C", "\uD06C\uAE30", "\uC720\uD615",
-						"\uC218\uC815\uD55C \uB0A0\uC9DC", "\uB9CC\uB4E0 \uB0A0\uC9DC" }) {
-			boolean[] columnEditables = new boolean[] { false, true, true, true, true, true };
+		Outline.repaint();
+	}
 
-			public boolean isCellEditable(int row, int column) {
-				return columnEditables[column];
+	private void renameFile() {
+		if (currentFile == null) {
+			showErrorMessage("파일을 선택해주세요.", "Select File");
+			return;
+		}
+
+		String renameTo = JOptionPane.showInputDialog(Outline, "새이름");
+		if (renameTo != null) {
+			try {
+				boolean directory = currentFile.isDirectory();
+				TreePath parentPath = findTreePath(currentFile.getParentFile());
+				DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) parentPath.getLastPathComponent();
+
+				boolean renamed = currentFile.renameTo(new File(currentFile.getParentFile(), renameTo));
+				if (renamed) {
+					if (directory) {
+						TreePath currentPath = findTreePath(currentFile);
+						System.out.println(currentPath);
+						DefaultMutableTreeNode currentNode = (DefaultMutableTreeNode) currentPath
+								.getLastPathComponent();
+
+						treeModel.removeNodeFromParent(currentNode);
+					}
+
+					showChild(parentNode);
+				} else {
+					String message = currentFile + " 파일의 이름을 변경할 수 없습니다.";
+					showErrorMessage(message, "Rename Failed");
+				}
+
+			} catch (Throwable t) {
+				showThrowable(t);
+			}
+		}
+
+		Outline.repaint();
+	}
+
+	private void newFile() {
+		if (currentFile == null) {
+			showErrorMessage("저장공간을 선택해주세요.", "Select Location");
+			return;
+		}
+
+		if (newFilePanel == null) {
+			newFilePanel = new JPanel(new BorderLayout(3, 3));
+
+			JPanel southRadio = new JPanel(new GridLayout(1, 0, 2, 2));
+			rbnewTypeFile = new JRadioButton("문서", true);
+			JRadioButton newTypeDirectory = new JRadioButton("파일");
+			ButtonGroup bg = new ButtonGroup();
+			bg.add(rbnewTypeFile);
+			bg.add(newTypeDirectory);
+			southRadio.add(rbnewTypeFile);
+			southRadio.add(newTypeDirectory);
+
+			tfname = new JTextField(15);
+
+			newFilePanel.add(new JLabel("Name"), BorderLayout.WEST);
+			newFilePanel.add(tfname);
+			newFilePanel.add(southRadio, BorderLayout.SOUTH);
+		}
+
+		int result = JOptionPane.showConfirmDialog(Outline, newFilePanel, "파일생성", JOptionPane.OK_CANCEL_OPTION);
+		if (result == JOptionPane.OK_OPTION) {
+			try {
+				boolean created;
+				File parentFile = currentFile;
+				if (!parentFile.isDirectory()) {
+					parentFile = parentFile.getParentFile();
+				}
+
+				File file = new File(parentFile, tfname.getText());
+				if (rbnewTypeFile.isSelected()) {
+					created = file.createNewFile();
+				} else {
+					created = file.mkdirs();
+				}
+
+				if (created) {
+					TreePath parentPath = findTreePath(parentFile);
+					DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) parentPath.getLastPathComponent();
+
+					if (file.isDirectory()) {
+						DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(file);
+
+						TreePath currentPath = findTreePath(currentFile);
+						DefaultMutableTreeNode currentNode = (DefaultMutableTreeNode) currentPath
+								.getLastPathComponent();
+
+						treeModel.insertNodeInto(newNode, parentNode, parentNode.getChildCount());
+					}
+
+					showChild(parentNode);
+				} else {
+					String message = currentFile + " 파일 생성에 실패했습니다.";
+					showErrorMessage(message, "Create Failed");
+				}
+			} catch (Throwable t) {
+				showThrowable(t);
+			}
+		}
+
+		Outline.repaint();
+	}
+
+	private void showErrorMessage(String errorMessage, String errorTitle) {
+		JOptionPane.showMessageDialog(Outline, errorMessage, errorTitle, JOptionPane.ERROR_MESSAGE);
+	}
+
+	private void showThrowable(Throwable t) {
+		t.printStackTrace();
+		JOptionPane.showMessageDialog(Outline, t.toString(), t.getMessage(), JOptionPane.ERROR_MESSAGE);
+		Outline.repaint();
+	}
+
+	private void setTableData(final File[] files) {
+		SwingUtilities.invokeLater(new Runnable() {
+
+			@Override
+			public void run() {
+				if (fileTableModel == null) {
+					fileTableModel = new FileTableModel();
+					table.setModel(fileTableModel);
+				}
+
+				table.getSelectionModel().removeListSelectionListener(listSelectionListener);
+				fileTableModel.setFiles(files);
+				table.getSelectionModel().addListSelectionListener(listSelectionListener);
+				if (!cellSizesSet) {
+					Icon icon = fileSystemView.getSystemIcon(files[0]);
+
+					table.setRowHeight(icon.getIconHeight() + rowIconPadding);
+
+					setColumnWidth(0, -1);
+					setColumnWidth(3, 60);
+					table.getColumnModel().getColumn(3).setMaxWidth(120);
+					setColumnWidth(4, -1);
+					setColumnWidth(5, -1);
+
+					cellSizesSet = true;
+				}
 			}
 		});
-		table.getColumnModel().getColumn(0).setResizable(false);
-		table.setAutoCreateRowSorter(true);
-
-		JScrollPane scrollPane_tree = new JScrollPane();
-		scrollPane_tree.setBounds(0, 25, 178, 572);
-		contentPane.add(scrollPane_tree);
-
-		tree = new JTree(treeModel);
-		scrollPane_tree.setViewportView(tree);
-		tree.setRootVisible(false);
-		tree.addTreeSelectionListener(treeSelectionListener);
-		tree.setCellRenderer(new DefaultTreeCellRenderer());
-		tree.expandRow(0);
-
 	}
+
+	private void setColumnWidth(int column, int width) {
+		TableColumn tableColumn = table.getColumnModel().getColumn(column);
+		if (width <= 0) {
+			JLabel label = new JLabel((String) tableColumn.getHeaderValue());
+			Dimension preferred = label.getPreferredSize();
+			width = (int) preferred.getWidth();
+		}
+
+		tableColumn.setPreferredWidth(width);
+		tableColumn.setMaxWidth(width);
+		tableColumn.setMinWidth(width);
+	}
+
+	protected void showChild(final DefaultMutableTreeNode node) {
+		tree.setEnabled(false);
+		progressBar.setVisible(true);
+		progressBar.setIndeterminate(true);
+
+		SwingWorker<Void, File> worker = new SwingWorker<Void, File>() {
+
+			@Override
+			public Void doInBackground() throws Exception {
+				File file = (File) node.getUserObject();
+				if (file.isDirectory()) {
+					File[] files = fileSystemView.getFiles(file, true);
+					if (node.isLeaf()) {
+						for (File child : files) {
+							if (child.isDirectory()) {
+								publish(child);
+							}
+						}
+					}
+
+					setTableData(files);
+				}
+				return null;
+			}
+
+			@Override
+			protected void process(List<File> chunks) {
+				for (File child : chunks) {
+					node.add(new DefaultMutableTreeNode(child));
+				}
+			}
+
+			@Override
+			protected void done() {
+				progressBar.setIndeterminate(false);
+				progressBar.setVisible(false);
+				tree.setEnabled(true);
+			}
+		};
+
+		worker.execute();
+	}
+
+	protected void setFileDetails(File file) {
+		currentFile = file;
+		Icon icon = fileSystemView.getSystemIcon(file);
+		lbfileName.setIcon(icon);
+		lbfileName.setText(fileSystemView.getSystemDisplayName(file));
+		tfpath.setText(file.getPath());
+		lbdate.setText(new Date(file.lastModified()).toString());
+		lbsize.setText(file.length() + "bytes");
+
+		rbDirectory.setSelected(file.isDirectory());
+		rbFile.setSelected(file.isFile());
+
+		JFrame f = (JFrame) Outline.getTopLevelAncestor();
+		if (f != null) {
+			f.setTitle(APP_TITLE + " :: " + fileSystemView.getSystemDisplayName(file));
+		}
+
+		Outline.repaint();
+	}
+
+	public static boolean copyFile(File from, File to) throws IOException {
+
+		boolean created = to.createNewFile();
+
+		if (created) {
+			FileChannel fromChannel = null;
+			FileChannel toChannel = null;
+
+			try {
+				fromChannel = new FileInputStream(from).getChannel();
+				toChannel = new FileOutputStream(to).getChannel();
+
+				toChannel.transferFrom(fromChannel, 0, fromChannel.size());
+			} finally {
+				if (fromChannel != null) {
+					fromChannel.close();
+				}
+
+				if (toChannel != null) {
+					toChannel.close();
+				}
+
+				return false;
+			}
+		}
+
+		return created;
+	}
+
+	public static void main(String[] args) {
+		SwingUtilities.invokeLater(new Runnable() {
+
+			@Override
+			public void run() {
+				try {
+					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+				} catch (Exception e) {
+
+				}
+
+				JFrame f = new JFrame(APP_TITLE);
+				f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+				FileManagementSystem fileManager = new FileManagementSystem();
+				f.setContentPane(fileManager.getGui());
+
+				try {
+					URL urlBig = fileManager.getClass().getResource("fm-icon-32x32.png");
+					URL urlSmall = fileManager.getClass().getResource("fm-icon-16x16.png");
+					ArrayList<Image> images = new ArrayList<Image>();
+					images.add(ImageIO.read(urlBig));
+					images.add(ImageIO.read(urlSmall));
+					f.setIconImages(images);
+				} catch (Exception e) {
+
+				}
+
+				f.pack();
+				f.setLocationByPlatform(true);
+				f.setMinimumSize(f.getSize());
+				f.setVisible(true);
+
+				fileManager.showRootFile();
+			}
+		});
+	}
+
 }

@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -73,8 +74,8 @@ public class LoginFrame extends JFrame {
 				int result = dao.findByUsernameAndPassword(Id, pwd);
 				if (result == 1) {
 					JOptionPane.showMessageDialog(null, "로그인 성공");
-					FileManagementSystem fileManagement = new FileManagementSystem();
-					fileManagement.setVisible(true);
+					FileManagementSystem fileManager = new FileManagementSystem();
+					fileManager.getGui();
 					dispose();
 				} else {
 					JOptionPane.showMessageDialog(null, "로그인 실패");
