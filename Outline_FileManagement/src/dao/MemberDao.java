@@ -79,6 +79,24 @@ public class MemberDao {
 		}
 		return -1;
 	}
+	
+	public int findID (String Id) {
+		conn = DBConnection.getConnection();
+
+		try {
+			pstmt = conn.prepareStatement("SELECT * FROM MEMBER WHERE ID = ?");
+			pstmt.setString(1, Id);
+
+			rs = pstmt.executeQuery();
+
+			if (rs.next()) {
+				return 1;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return -1;
+	}
 
 	public int findPwd(String Name, String Phone1, String Phone2, String Id, String Email) {
 		conn = DBConnection.getConnection();
@@ -148,4 +166,5 @@ public class MemberDao {
 
 		return null;
 	}
+
 }

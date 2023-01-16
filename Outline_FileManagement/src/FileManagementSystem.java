@@ -268,9 +268,7 @@ public class FileManagementSystem {
 
 				@Override
 				public void actionPerformed(ActionEvent e) {
-//					
-//					
-
+					//
 				}
 			});
 			toolBar.add(btnCopy);
@@ -514,7 +512,6 @@ public class FileManagementSystem {
 					setColumnWidth(3, 60);
 					table.getColumnModel().getColumn(3).setMaxWidth(120);
 					setColumnWidth(4, -1);
-					setColumnWidth(5, -1);
 
 					cellSizesSet = true;
 				}
@@ -611,6 +608,7 @@ public class FileManagementSystem {
 				toChannel = new FileOutputStream(to).getChannel();
 
 				toChannel.transferFrom(fromChannel, 0, fromChannel.size());
+
 			} finally {
 				if (fromChannel != null) {
 					fromChannel.close();
